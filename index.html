@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Deutsch Coach</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:wght@600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#f4f6f8;--card:#fff;--ink:#1b2a41;--mute:#64748b;--line:#e2e8f0;--me:#1b2a41;--meink:#fff;--gold:#e0a800;--err:#c8372d;--errbg:#fdecea;--ok:#1f7a4d;--okbg:#e8f5ee}
+@media(prefers-color-scheme:dark){:root{--bg:#10151d;--card:#1a222e;--ink:#e8edf3;--mute:#8b9bb0;--line:#2a3544;--me:#e0a800;--meink:#10151d;--errbg:#3a1f1d;--ok:#6fd3a0;--okbg:#173024}}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{font:16px/1.45 Inter,system-ui,sans-serif;background:var(--bg);color:var(--ink);display:flex;flex-direction:column;padding-top:env(safe-area-inset-top,0)}
+header{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--card);border-bottom:1px solid var(--line)}
+h1{font:700 20px Fraunces,Georgia,serif;margin:0;flex:1}
+select,input,button{font:inherit;color:inherit}
+select,input{background:var(--bg);border:1px solid var(--line);border-radius:10px;padding:8px 10px}
+.ib{background:none;border:1px solid var(--line);border-radius:10px;padding:8px 10px;cursor:pointer}
+#chat{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:12px}
+.m{max-width:88%;padding:10px 13px;border-radius:16px;background:var(--card);border:1px solid var(--line);align-self:flex-start}
+.m.me{background:var(--me);color:var(--meink);border:0;align-self:flex-end}
+.de{font-weight:600;font-size:17px}
+.en{color:var(--mute);font-size:14px;margin-top:4px}
+.fix{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--errbg);font-size:14px}
+.fix s{color:var(--err)}.fix b{color:var(--ok)}
+.good{margin-top:8px;padding:6px 10px;border-radius:10px;background:var(--okbg);color:var(--ok);font-size:14px}
+.tip{margin-top:8px;font-size:13px;border-left:3px solid var(--gold);padding-left:8px}
+.spk{margin-top:6px;background:none;border:0;color:var(--mute);cursor:pointer;padding:0;font-size:14px}
+.sys{align-self:center;color:var(--mute);font-size:13px;text-align:center}
+footer{display:flex;gap:8px;padding:10px 12px calc(10px + env(safe-area-inset-bottom,0));background:var(--card);border-top:1px solid var(--line)}
+#txt{flex:1;min-width:0}
+#mic{width:48px;height:48px;border-radius:50%;border:0;background:var(--gold);color:#1b2a41;font-size:20px;cursor:pointer}
+#mic.on{background:var(--err);color:#fff;animation:p 1s infinite}
+@keyframes p{50%{transform:scale(1.1)}}
+#send{background:var(--me);color:var(--meink);border:0;border-radius:10px;padding:0 16px;cursor:pointer}
+dialog{border:1px solid var(--line);border-radius:16px;background:var(--card);color:var(--ink);width:min(92vw,420px)}
+dialog label{display:block;margin:10px 0 4px;font-size:14px;color:var(--mute)}
+dialog input,dialog select{width:100%}
+dialog .row{display:flex;gap:8px;margin-top:14px;justify-content:flex-end}
+small{color:var(--mute)}
+.en.hid{filter:blur(6px);cursor:pointer;user-select:none}
+.ib.act{background:var(--gold);color:#1b2a41;border-color:var(--gold)}
+.sc{margin-top:8px;padding:8px 10px;border-radius:10px;background:var(--bg);font-size:14px}
+.sc .w{font-weight:600;font-size:16px}.sc .y{color:var(--ok)}.sc .n{color:var(--err);text-decoration:underline}
+.nx{margin-top:8px;background:var(--me);color:var(--meink);border:0;border-radius:10px;padding:6px 12px;cursor:pointer}
+h1{font-size:18px}
+</style>
+</head>
+<body>
+<header>
+  <h1>Deutsch Coach</h1>
+  <select id="level" aria-label="Level">
+    <option value="A1">A1 Beginner</option><option value="A2">A2 Elementary</option>
+    <option value="B1">B1 Intermediate</option><option value="B2">B2 Upper-int.</option><option value="C1">C1 Advanced</option>
+  </select>
+  <button class="ib" id="prac" title="Pronunciation practice">🎯</button>
+  <button class="ib" id="hide" title="Hide English until tapped">👁️</button>
+  <button class="ib" id="voice" title="Speak replies">🔊</button>
+  <button class="ib" id="cfg" title="Settings">⚙️</button>
+</header>
+<div id="chat"></div>
+<footer>
+  <button id="mic" title="Tap and speak German">🎤</button>
+  <input id="txt" placeholder="Schreib oder sprich auf Deutsch…" autocomplete="off">
+  <button id="send">Send</button>
+</footer>
+
+<dialog id="dlg">
+  <h3 style="margin:0 0 4px">Settings</h3>
+  <small>Your key stays in this browser only and goes straight to the provider.</small>
+  <label>AI provider</label>
+  <select id="prov"><option value="gemini">Google Gemini (free key)</option><option value="openai">OpenAI</option><option value="anthropic">Anthropic Claude</option></select>
+  <label>API key</label><input id="key" type="password" placeholder="Paste your API key">
+  <label>Model</label><input id="model">
+  <small id="hint"></small>
+  <div class="row"><button class="ib" id="close">Save</button></div>
+</dialog>
+
+<script>
+const $=id=>document.getElementById(id);
+const ls=(k,v)=>{try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v)}catch(e){return null}};
+const DEF={
+  gemini:["gemini-3.5-flash-lite","Get a free key at aistudio.google.com/apikey"],
+  openai:["gpt-4o-mini","Key from platform.openai.com/api-keys"],
+  anthropic:["claude-haiku-4-5-20251001","Key from console.anthropic.com"]
+};
+let hist=[], speakOn=ls("speak")!=="0", busy=false, hideEn=ls("hideEn")==="1", practice=false, target="";
+$("hide").textContent=hideEn?"🙈":"👁️";$("hide").classList.toggle("act",hideEn);
+$("hide").onclick=()=>{hideEn=!hideEn;ls("hideEn",hideEn?"1":"0");$("hide").textContent=hideEn?"🙈":"👁️";$("hide").classList.toggle("act",hideEn);document.querySelectorAll(".en").forEach(e=>e.classList.toggle("hid",hideEn));};
+$("prac").onclick=()=>{practice=!practice;$("prac").classList.toggle("act",practice);start()};
+
+$("level").value=ls("level")||"A1";
+$("prov").value=ls("prov")||"gemini";
+$("key").value=ls("key")||"";
+$("model").value=ls("model")||DEF[$("prov").value][0];
+$("voice").textContent=speakOn?"🔊":"🔇";
+
+function hint(){$("hint").textContent=DEF[$("prov").value][1]}
+hint();
+$("prov").onchange=()=>{$("model").value=DEF[$("prov").value][0];hint()};
+$("cfg").onclick=()=>$("dlg").showModal();
+$("close").onclick=()=>{ls("prov",$("prov").value);ls("key",$("key").value.trim());ls("model",$("model").value.trim());$("dlg").close()};
+$("voice").onclick=()=>{speakOn=!speakOn;ls("speak",speakOn?"1":"0");$("voice").textContent=speakOn?"🔊":"🔇";if(!speakOn)speechSynthesis.cancel()};
+$("level").onchange=()=>{ls("level",$("level").value);start()};
+
+const PRAC=()=>`You are a German pronunciation coach for an English speaker at CEFR level ${$("level").value}.
+Each turn, give ONE new, useful German phrase or sentence at that level for the learner to say aloud (A1: 3-6 words; C1: a full complex sentence). Vary the topic and never repeat an earlier phrase.
+Output ONLY valid JSON, no markdown: {"german":"the phrase","english":"English translation","mistakes":[],"praise":"","tip":"one-line English pronunciation tip for the trickiest sounds (e.g. ch, ü, r, z)"}`;
+const system=()=>practice?PRAC():`You are a friendly German tutor chatting with an English speaker at CEFR level ${$("level").value}.
+Rules:
+- Reply in German at ${$("level").value} level (short, simple sentences for A1/A2). Keep the conversation going by ending with a question.
+- Always give an English translation of your German reply.
+- Check the learner's last message for mistakes (grammar, word order, gender, case, spelling, wrong words). Ignore punctuation/capitalisation from speech recognition. If the learner wrote English, give the German version as a correction.
+- Output ONLY valid JSON, no markdown, in this shape:
+{"german":"your German reply","english":"English translation","mistakes":[{"wrong":"what they said","right":"corrected German","why":"short English explanation"}],"praise":"short English praise if there were no mistakes, else empty","tip":"optional one-line English grammar/vocab tip, else empty"}
+- "mistakes" must be [] when the message was correct.`;
+
+async function ask(){
+  const key=$("key").value.trim(), prov=$("prov").value, model=$("model").value.trim();
+  if(!key){$("dlg").showModal();throw new Error("Add your API key in settings first.")}
+  const sys=system(), msgs=hist.slice(-20);
+  let r,j;
+  if(prov==="gemini"){
+    const url=`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent`;
+    r=await fetch(url,{
+      method:"POST",
+      headers:{
+        "Content-Type":"application/json",
+        "x-goog-api-key":key
+      },
+      body:JSON.stringify({
+        systemInstruction:{parts:[{text:sys}]},
+        contents:msgs.map(m=>({
+          role:m.role==="user"?"user":"model",
+          parts:[{text:m.content}]
+        })),
+        generationConfig:{responseMimeType:"application/json"}
+      })
+    });
+    j=await r.json();
+    if(!r.ok){
+      const msg=j.error?.message || j.error?.status || String(r.status);
+      throw new Error(msg);
+    }
+    const text=j.candidates?.[0]?.content?.parts?.[0]?.text;
+    if(!text) throw new Error("Empty response from Gemini");
+    return text;
+  }
+  if(prov==="openai"){
+    r=await fetch("https://api.openai.com/v1/chat/completions",{method:"POST",headers:{"Content-Type":"application/json",Authorization:"Bearer "+key},body:JSON.stringify({model,response_format:{type:"json_object"},messages:[{role:"system",content:sys},...msgs]})});
+    j=await r.json(); if(!r.ok)throw new Error(j.error?.message||r.status);
+    return j.choices[0].message.content;
+  }
+  r=await fetch("https://api.anthropic.com/v1/messages",{method:"POST",headers:{"Content-Type":"application/json","x-api-key":key,"anthropic-version":"2023-06-01","anthropic-dangerous-direct-browser-access":"true"},body:JSON.stringify({model,max_tokens:1000,system:sys,messages:msgs})});
+  j=await r.json(); if(!r.ok)throw new Error(j.error?.message||r.status);
+  return j.content[0].text;
+}
+
+function el(cls,html){const d=document.createElement("div");d.className=cls;d.innerHTML=html;$("chat").appendChild(d);$("chat").scrollTop=1e9;return d}
+const esc=s=>String(s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+function speak(t){
+  if(!("speechSynthesis" in window))return;
+  speechSynthesis.cancel();
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang="de-DE";
+  u.rate=1.05;
+  u.pitch=1.0;
+  u.volume=1;
+  const voices=speechSynthesis.getVoices();
+  const preferred=voices.find(v=>
+    v.lang.startsWith("de")&&
+    (v.name.includes("Google")||
+     v.name.includes("Microsoft")||
+     v.name.includes("Anna")||
+     v.name.includes("Helena")||
+     v.name.includes("Katja")||
+     v.name.includes("Natural")||
+     v.name.includes("Premium"))
+  )||voices.find(v=>v.lang.startsWith("de"));
+  if(preferred)u.voice=preferred;
+  speechSynthesis.speak(u);
+}
+
+// Ensure voices are loaded
+if("speechSynthesis" in window){
+  speechSynthesis.getVoices();
+  speechSynthesis.onvoiceschanged=()=>{};
+}
+
+function render(o){
+  let h=`<div class="de">${esc(o.german)}</div><div class="en${hideEn?" hid":""}" title="Tap to reveal">${esc(o.english)}</div>`;
+  if(o.mistakes?.length){
+    h+=o.mistakes.map(m=>`<div class="fix">❌ <s>${esc(m.wrong)}</s><br>✅ <b>${esc(m.right)}</b><br><small>${esc(m.why)}</small></div>`).join("");
+  } else if(o.praise){
+    h+=`<div class="good">✓ ${esc(o.praise)}</div>`;
+  }
+  if(o.tip) h+=`<div class="tip">💡 ${esc(o.tip)}</div>`;
+  h+=`<button class="spk">🔈 Listen</button>`;
+  const d=el("m",h);
+  d.querySelector(".spk").onclick=()=>speak(o.german);
+  d.querySelector(".en").onclick=e=>e.currentTarget.classList.remove("hid");
+  if(speakOn) speak(o.german);
+}
+
+async function turn(){
+  busy=true;const w=el("sys","Thinking…");
+  try{
+    const raw=await ask();
+    const o=JSON.parse(raw.replace(/```json|```/g,"").trim());
+    hist.push({role:"assistant",content:raw});
+    w.remove();render(o);if(practice)target=o.german;
+  }catch(e){w.remove();hist.pop();el("sys","⚠️ "+esc(e.message));}
+  busy=false;
+}
+
+function start(){
+  speechSynthesis.cancel?.();hist=[];target="";$("chat").innerHTML="";
+  if(practice){
+    el("sys",`Practice mode, level ${$("level").value}. Listen to the phrase, then tap 🎤 and say it.`);
+    hist.push({role:"user",content:"Give me my first phrase to practice."});
+  }else{
+    el("sys",`Level ${$("level").value}. Tap 🎤 and speak German, or type.`);
+    hist.push({role:"user",content:"Hallo! Please greet me and start a simple conversation at my level. (No mistakes to check yet.)"});
+  }
+  turn();
+}
+
+function lev(a,b){const d=[...Array(b.length+1).keys()];for(let i=1;i<=a.length;i++){let p=d[0];d[0]=i;for(let j=1;j<=b.length;j++){const t=d[j];d[j]=Math.min(d[j]+1,d[j-1]+1,p+(a[i-1]===b[j-1]?0:1));p=t}}return d[b.length]}
+function score(said){
+  const norm=s=>s.toLowerCase().replace(/[^\p{L}\s]/gu," ").split(/\s+/).filter(Boolean);
+  const sp=norm(said);
+  const words=target.split(/\s+/).filter(Boolean).map(w=>{
+    const n=norm(w)[0]||"";
+    return{w,ok:!n||sp.some(s=>s===n||(n.length>4&&lev(s,n)<=1))};
+  });
+  const pct=Math.round(100*words.filter(x=>x.ok).length/words.length);
+  const verdict=pct>=90?"🎉 Excellent!":pct>=60?"👍 Nearly there":"🔁 Try again";
+  const d=el("m",`<div>${verdict} ${pct}%</div>
+    <div class="sc">
+      <div>${words.map(x=>`<span class="w ${x.ok?"y":"n"}">${esc(x.w)}</span>`).join(" ")}</div>
+      <small>You said: ${esc(said)}</small>
+      ${pct<100?"<br><small>Red words need work. Tap 🔈 Listen on the phrase, then tap 🎤 again.</small>":""}
+    </div>
+    <button class="nx">Next phrase</button>`);
+  d.querySelector(".nx").onclick=()=>{if(busy)return;hist.push({role:"user",content:"Next phrase please, a different one."});turn()};
+}
+
+function send(t){
+  t=(t||$("txt").value).trim();if(!t||busy)return;
+  $("txt").value="";el("m me",esc(t));
+  if(practice&&target){score(t);return}
+  hist.push({role:"user",content:t});turn();
+}
+$("send").onclick=()=>send();
+$("txt").onkeydown=e=>{if(e.key==="Enter")send()};
+
+// Voice input
+const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+let rec=null;
+$("mic").onclick=()=>{
+  if(!SR){el("sys","⚠️ Voice input isn't supported in this browser. Use Chrome (Android/desktop) or Safari, or type instead.");return}
+  if(rec){rec.stop();return}
+  speechSynthesis.cancel();
+  rec=new SR();rec.lang="de-DE";rec.interimResults=true;rec.maxAlternatives=1;
+  let final="";
+  rec.onstart=()=>$("mic").classList.add("on");
+  rec.onresult=e=>{let s="";for(const r of e.results){s+=r[0].transcript;if(r.isFinal)final=s}$("txt").value=s;final=s};
+  rec.onerror=e=>{el("sys","⚠️ Mic: "+(e.error==="not-allowed"?"permission denied — allow microphone access.":e.error))};
+  rec.onend=()=>{$("mic").classList.remove("on");rec=null;if(final)send(final)};
+  rec.start();
+};
+
+if(!ls("key"))$("dlg").showModal();
+start();
+</script>
+</body>
+</html>
